@@ -9,9 +9,9 @@ import { client } from "../utils/wallet";
  * @returns {Promise<Object>} - Result of the tip transaction
  */
 export async function sendTip(
-  wallet,
-  message = "",
-  tipAmount = "0.01"
+  wallet: any,
+  message: string = "",
+  tipAmount: string = "0.01"
 ) {
   try {
     if (!wallet) {
@@ -27,9 +27,12 @@ export async function sendTip(
     const fetchWithPay = wrapFetchWithPayment(fetch, client, wallet);
 
     // Make the tip request with x402 payment
-    // Note: For now, we'll use a direct contract call instead of API endpoint
-    // The x402 integration can be added when backend is set up
-    const response = await fetchWithPay("/api/tip", {
+    // The API endpoint should be your backend server URL
+    // For local dev: "http://localhost:3001/api/tip"
+    // For production: "https://your-api-domain.com/api/tip"
+    const apiUrl = import.meta.env.VITE_X402_API_URL || "http://localhost:3001/api/tip";
+    
+    const response = await fetchWithPay(apiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -50,7 +53,7 @@ export async function sendTip(
 
     // Fallback: Use direct contract call
     throw new Error("API endpoint not available. Use sendDirectTip instead.");
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error sending tip:", error);
     throw error;
   }
@@ -66,10 +69,10 @@ export async function sendTip(
  * @returns {Promise<Object>} - Transaction receipt
  */
 export async function sendDirectTip(
-  wallet,
-  contractAddress,
-  message = "",
-  tipAmount = "0.01"
+  wallet: any,
+  contractAddress: string,
+  message: string = "",
+  tipAmount: string = "0.01"
 ) {
   try {
     if (!wallet) {
@@ -118,7 +121,7 @@ export async function sendDirectTip(
       transactionHash: transaction.transactionHash,
       message: "Tip sent successfully!",
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error sending direct tip:", error);
     throw error;
   }
@@ -134,10 +137,10 @@ export async function sendDirectTip(
  * @returns {Promise<Object>} - Transaction receipt
  */
 export async function sendCreatorTip(
-  wallet,
-  contractAddress,
-  message = "",
-  tipAmount = "0.01"
+  wallet: any,
+  contractAddress: string,
+  message: string = "",
+  tipAmount: string = "0.01"
 ) {
   try {
     if (!wallet) {
@@ -194,7 +197,7 @@ export async function sendCreatorTip(
       message: "Tip sent successfully!",
       amount: tipAmount,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error sending creator tip:", error);
     throw error;
   }

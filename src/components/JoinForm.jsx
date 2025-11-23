@@ -13,12 +13,9 @@ const JoinForm = ({ onJoin, wallet, isDeployingToken, tokenDeploymentStatus }) =
       return;
     }
 
-    // If host, require token name and symbol
-    if (isHost && (!tokenName || !tokenSymbol)) {
-      alert("Please enter Token Name and Symbol to deploy fan token");
-      return;
-    }
-
+    // Token deployment is optional (currently not working with Thirdweb SDK)
+    // Users can still join without deploying a token
+    
     onJoin({ 
       roomID, 
       userID,
@@ -65,7 +62,7 @@ const JoinForm = ({ onJoin, wallet, isDeployingToken, tokenDeploymentStatus }) =
 
         {isHost && wallet && (
           <div className="flex flex-col gap-3 p-3 bg-purple-900/20 rounded-lg border border-purple-500/30">
-            <p className="text-xs text-purple-300">Fan Token Details (Required)</p>
+            <p className="text-xs text-purple-300">Fan Token Details (Will deploy via Hardhat)</p>
             <input
               type="text"
               placeholder="Token Name (e.g., StreamerFanToken)"

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
-import { sendDirectTip } from "../lib/sendTip";
+import { sendCreatorTip } from "../lib/sendTip";
 
 const LiveStream = ({ roomID, userID, wallet, tokenAddress, tokenName, tokenSymbol, isHost }) => {
   const containerRef = useRef(null);
@@ -39,9 +39,11 @@ const LiveStream = ({ roomID, userID, wallet, tokenAddress, tokenName, tokenSymb
 
   const [isTipping, setIsTipping] = useState(false);
   const [tipMessage, setTipMessage] = useState("");
+  const [tipAmount, setTipAmount] = useState("0.01");
 
-  // Get contract address from environment or use default
-  const contractAddress = import.meta.env.VITE_TIPJAR_CONTRACT_ADDRESS || "";
+  // Get CreatorTip contract address from environment
+  // You can set this in .env as VITE_CREATOR_TIP_CONTRACT_ADDRESS
+  const contractAddress = import.meta.env.VITE_CREATOR_TIP_CONTRACT_ADDRESS || "";
 
   const handleTipStreamer = async () => {
     if (!wallet) {
@@ -50,22 +52,30 @@ const LiveStream = ({ roomID, userID, wallet, tokenAddress, tokenName, tokenSymb
     }
 
     if (!contractAddress) {
-      alert("Contract address not configured. Please set VITE_TIPJAR_CONTRACT_ADDRESS in your .env file.");
+      alert("CreatorTip contract address not configured. Please set VITE_CREATOR_TIP_CONTRACT_ADDRESS in your .env file.");
+      return;
+    }
+
+    // Validate tip amount
+    const amount = parseFloat(tipAmount);
+    if (isNaN(amount) || amount <= 0) {
+      alert("Please enter a valid tip amount greater than 0");
       return;
     }
 
     setIsTipping(true);
     try {
-      const result = await sendDirectTip(
+      const result = await sendCreatorTip(
         wallet,
         contractAddress,
-        tipMessage || "Thanks for the stream!",
-        "0.01" // Default tip amount: 0.01 CHZ
+        tipMessage || "",
+        tipAmount
       );
 
       if (result.success) {
-        alert(`Tip sent successfully! Transaction: ${result.transactionHash}`);
+        alert(`Tip of ${tipAmount} CHZ sent successfully!\nTransaction: ${result.transactionHash}`);
         setTipMessage(""); // Clear message after successful tip
+        setTipAmount("0.01"); // Reset to default
       }
     } catch (error) {
       console.error("Error sending tip:", error);
@@ -83,36 +93,42 @@ const LiveStream = ({ roomID, userID, wallet, tokenAddress, tokenName, tokenSymb
         className="w-full flex-1 zego_container"
       />
       
-      {/* Token Info Section (if deployed) */}
-      {isHost && tokenAddress && (
-        <div className="w-full flex justify-center items-center p-3 bg-purple-900/30 border-b border-purple-500/30">
-          <div className="text-center">
-            <p className="text-xs text-purple-300 mb-1">Fan Token Deployed!</p>
-            <div className="flex items-center gap-2 justify-center">
-              <span className="text-white font-semibold">{tokenName} ({tokenSymbol})</span>
-              <span className="text-xs text-gray-400 font-mono">
-                {tokenAddress.slice(0, 6)}...{tokenAddress.slice(-4)}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Tip Streamer Button Section */}
       <div className="w-full flex flex-col justify-center items-center p-4 bg-gray-900/50 border-t border-gray-700 gap-3">
-        <div className="flex items-center gap-3 w-full max-w-md">
-          <input
-            type="text"
-            placeholder="Add a message (optional)"
-            value={tipMessage}
-            onChange={(e) => setTipMessage(e.target.value)}
-            className="flex-1 px-4 py-2 bg-white/10 text-white placeholder-white/50 border border-white/20 rounded-lg focus:outline-none focus:border-purple-500"
-            disabled={isTipping}
-          />
+        <div className="w-full max-w-md space-y-3">
+          {/* Amount Input */}
+          <div className="flex items-center gap-2">
+            <label className="text-white text-sm font-medium min-w-[80px]">Amount (CHZ):</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0.01"
+              placeholder="0.01"
+              value={tipAmount}
+              onChange={(e) => setTipAmount(e.target.value)}
+              className="flex-1 px-4 py-2 bg-white/10 text-white placeholder-white/50 border border-white/20 rounded-lg focus:outline-none focus:border-purple-500"
+              disabled={isTipping}
+            />
+          </div>
+
+          {/* Message Input */}
+          <div className="flex items-center gap-2">
+            <label className="text-white text-sm font-medium min-w-[80px]">Message:</label>
+            <input
+              type="text"
+              placeholder="Optional message..."
+              value={tipMessage}
+              onChange={(e) => setTipMessage(e.target.value)}
+              className="flex-1 px-4 py-2 bg-white/10 text-white placeholder-white/50 border border-white/20 rounded-lg focus:outline-none focus:border-purple-500"
+              disabled={isTipping}
+            />
+          </div>
+
+          {/* Tip Button */}
           <button
             onClick={handleTipStreamer}
-            disabled={isTipping || !wallet}
-            className="px-8 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2"
+            disabled={isTipping || !wallet || !contractAddress}
+            className="w-full px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
           >
             {isTipping ? (
               <>
@@ -136,7 +152,7 @@ const LiveStream = ({ roomID, userID, wallet, tokenAddress, tokenName, tokenSymb
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Sending...
+                Sending Tip...
               </>
             ) : (
               <>
@@ -153,16 +169,23 @@ const LiveStream = ({ roomID, userID, wallet, tokenAddress, tokenName, tokenSymb
                     clipRule="evenodd"
                   />
                 </svg>
-                Tip 0.01 CHZ
+                Send {tipAmount} CHZ Tip
               </>
             )}
           </button>
+
+          {/* Status Messages */}
+          {!wallet && (
+            <p className="text-xs text-yellow-400 text-center">
+              Connect your wallet to send tips
+            </p>
+          )}
+          {!contractAddress && wallet && (
+            <p className="text-xs text-red-400 text-center">
+              CreatorTip contract address not configured. Set VITE_CREATOR_TIP_CONTRACT_ADDRESS in .env
+            </p>
+          )}
         </div>
-        {!wallet && (
-          <p className="text-xs text-yellow-400">
-            Connect your wallet to send tips
-          </p>
-        )}
       </div>
     </div>
   );

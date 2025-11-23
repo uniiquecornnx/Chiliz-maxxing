@@ -1,14 +1,10 @@
-import { deployPublishedContract } from "thirdweb/deploys";
-import { client } from "./wallet";
-
-// Streamer wallet address for deployment
-const STREAMER_WALLET_ADDRESS = "0x0b198e6492adEe3573A53D72B1baA0D3Ed9a27E4";
+import { deployFanTokenDirect } from "./deployTokenDirect";
 
 /**
- * Deploy a fan token using Thirdweb API
- * Uses the streamer wallet address for deployment
+ * Deploy fan token using direct wallet deployment
+ * Uses the connected wallet's gas fees
  * 
- * @param {Object} wallet - Connected wallet instance (for signing)
+ * @param {Object} wallet - Connected wallet instance
  * @param {string} tokenName - Name of the token (e.g., "StreamerFanToken")
  * @param {string} tokenSymbol - Symbol of the token (e.g., "SFT")
  * @param {string} initialSupply - Initial supply (e.g., "1000000" for 1M tokens)
@@ -29,126 +25,32 @@ export async function deployFanToken(
       throw new Error("Token name and symbol are required");
     }
 
-    // Get account and chain from wallet
-    const account = await wallet.getAccount();
-    const chain = await wallet.getChain();
+    console.log("🚀 Deploying fan token:", { tokenName, tokenSymbol, initialSupply });
 
-    console.log("Deploying fan token:", { tokenName, tokenSymbol, initialSupply });
-    console.log("Account:", account);
-    console.log("Chain:", chain);
-    console.log("Streamer wallet:", STREAMER_WALLET_ADDRESS);
+    // Use direct deployment (faster, no backend needed)
+    const result = await deployFanTokenDirect(
+      wallet,
+      tokenName,
+      tokenSymbol,
+      initialSupply
+    );
 
-    // Verify account and address
-    if (!account) {
-      throw new Error("Invalid wallet account. Please reconnect your wallet.");
-    }
-
-    const deployerAddress = STREAMER_WALLET_ADDRESS; // Use streamer wallet
-    if (!deployerAddress || !deployerAddress.startsWith("0x")) {
-      throw new Error("Invalid deployer address.");
-    }
-
-    // Get client ID from environment
-    const clientId = import.meta.env.VITE_THIRDWEB_CLIENT_ID;
-    if (!clientId) {
-      throw new Error("VITE_THIRDWEB_CLIENT_ID is not set");
-    }
-
-    console.log("Deploying via Thirdweb SDK...");
-    console.log("Chain ID:", chain?.id);
-    console.log("Chain Name:", chain?.name);
-
-    // Deploy using Thirdweb SDK
-    // Try different contract IDs and parameter structures
-    let contractAddress;
-    let lastError;
-
-    // Try 1: TokenERC20 with full parameters
-    try {
-      console.log("Attempting TokenERC20 deployment...");
-      contractAddress = await deployPublishedContract({
-        client,
-        chain,
-        account,
-        contractId: "TokenERC20",
-        constructorParams: {
-          defaultAdmin: deployerAddress,
-          name: tokenName,
-          symbol: tokenSymbol,
-          primarySaleRecipient: deployerAddress,
-          platformFeeBps: 0,
-          platformFeeRecipient: "0x0000000000000000000000000000000000000000",
-        },
-      });
-      console.log("✅ TokenERC20 deployment successful!");
-    } catch (error1) {
-      console.log("TokenERC20 failed:", error1.message);
-      lastError = error1;
-      
-      // Try 2: TokenERC20 with account address as admin
-      try {
-        console.log("Attempting TokenERC20 with account address...");
-        contractAddress = await deployPublishedContract({
-          client,
-          chain,
-          account,
-          contractId: "TokenERC20",
-          constructorParams: {
-            defaultAdmin: account.address,
-            name: tokenName,
-            symbol: tokenSymbol,
-            primarySaleRecipient: account.address,
-            platformFeeBps: 0,
-            platformFeeRecipient: "0x0000000000000000000000000000000000000000",
-          },
-        });
-        console.log("✅ TokenERC20 deployment successful (with account address)!");
-      } catch (error2) {
-        console.log("TokenERC20 with account address failed:", error2.message);
-        lastError = error2;
-        
-        // Try 3: Simple Token contract
-        try {
-          console.log("Attempting simple Token contract...");
-          contractAddress = await deployPublishedContract({
-            client,
-            chain,
-            account,
-            contractId: "Token",
-            constructorParams: {
-              name: tokenName,
-              symbol: tokenSymbol,
-            },
-          });
-          console.log("✅ Token deployment successful!");
-        } catch (error3) {
-          console.log("Token contract failed:", error3.message);
-          lastError = error3;
-          throw new Error(`All deployment attempts failed. Last error: ${lastError.message}`);
-        }
-      }
-    }
-
-    if (!contractAddress) {
-      throw new Error("Deployment failed: No contract address returned");
-    }
-
-    console.log("Token deployed to:", contractAddress);
+    console.log("✅ Token deployed successfully:", result);
 
     return {
       success: true,
-      contractAddress: contractAddress,
-      tokenName: tokenName,
-      tokenSymbol: tokenSymbol,
-      initialSupply: initialSupply,
+      contractAddress: result.contractAddress,
+      tokenName: result.tokenName,
+      tokenSymbol: result.tokenSymbol,
+      initialSupply: result.totalSupply,
       message: "Fan token deployed successfully!",
+      explorerUrl: result.explorerUrl
     };
   } catch (error) {
-    console.error("Error deploying fan token:", error);
+    console.error("❌ Error deploying fan token:", error);
     throw error;
   }
 }
-
 
 /**
  * Alternative: Deploy using custom contract bytecode

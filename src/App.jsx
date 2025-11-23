@@ -36,7 +36,7 @@ function App() {
     // If user is a host and wants to deploy a token
     if (isHost && tokenName && tokenSymbol && wallet) {
       setIsDeployingToken(true);
-      setTokenDeploymentStatus({ message: "Deploying fan token...", success: false });
+        setTokenDeploymentStatus({ message: "Deploying fan token (10-30 sec)...", success: false });
       
       try {
         const result = await deployFanToken(
@@ -70,9 +70,9 @@ function App() {
     setRoomData({ 
       roomID, 
       userID,
-      tokenAddress: deployedToken?.contractAddress,
-      tokenName: tokenName,
-      tokenSymbol: tokenSymbol,
+      tokenAddress: deployedToken?.contractAddress || null,
+      tokenName: tokenName || null,
+      tokenSymbol: tokenSymbol || null,
       isHost: isHost
     });
     setJoined(true);

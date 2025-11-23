@@ -1,0 +1,30 @@
+{
+  "name": "hardhat-token-deployer",
+  "version": "1.0.0",
+  "description": "Hardhat project for deploying custom tokens",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "npx hardhat run scripts/deploy-simple.js --network chilizSpicy",
+    "deploy:tip": "npx hardhat run scripts/deploy-creator-tip.js --network chilizSpicy",
+    "deploy:local": "npx hardhat run scripts/deploy-token.js --network localhost",
+    "deploy:interactive": "node scripts/interactive-deploy.js",
+    "node": "npx hardhat node",
+    "compile": "npx hardhat compile",
+    "test": "npx hardhat test"
+  },
+  "keywords": [
+    "hardhat",
+    "ethereum",
+    "token",
+    "erc20",
+    "chiliz"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.4.0",
+    "dotenv": "^16.4.5",
+    "hardhat": "^2.22.0"
+  }
+}
