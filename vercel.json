@@ -1,0 +1,14 @@
+{
+  "functions": {
+    "api/tip/index.js": {
+      "runtime": "nodejs20.x"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/tip",
+      "destination": "/api/tip"
+    }
+  ]
+}
+

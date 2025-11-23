@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import JoinForm from "./components/JoinForm";
 import LiveStream from "./components/LiveStream";
 import { connectWallet, disconnectWallet, getWalletAddress, getWalletChain } from "./utils/wallet";
+import { deployFanToken } from "./utils/deployToken";
 
 function App() {
   const [joined, setJoined] = useState(false);
@@ -10,6 +11,9 @@ function App() {
   const [walletAddress, setWalletAddress] = useState(null);
   const [walletChain, setWalletChain] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isDeployingToken, setIsDeployingToken] = useState(false);
+  const [tokenDeploymentStatus, setTokenDeploymentStatus] = useState(null);
+  const [deployedToken, setDeployedToken] = useState(null);
 
   // Update wallet address and chain when wallet changes
   useEffect(() => {
@@ -28,8 +32,49 @@ function App() {
     updateWalletInfo();
   }, [wallet]);
 
-  const handleJoin = ({ roomID, userID }) => {
-    setRoomData({ roomID, userID });
+  const handleJoin = async ({ roomID, userID, tokenName, tokenSymbol, isHost }) => {
+    // If user is a host and wants to deploy a token
+    if (isHost && tokenName && tokenSymbol && wallet) {
+      setIsDeployingToken(true);
+      setTokenDeploymentStatus({ message: "Deploying fan token...", success: false });
+      
+      try {
+        const result = await deployFanToken(
+          wallet,
+          tokenName,
+          tokenSymbol,
+          "1000000" // Initial supply: 1,000,000 tokens
+        );
+        
+        setDeployedToken(result);
+        setTokenDeploymentStatus({
+          message: `Token deployed! Address: ${result.contractAddress.slice(0, 10)}...`,
+          success: true
+        });
+        
+        // Small delay to show success message
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      } catch (error) {
+        console.error("Token deployment failed:", error);
+        setTokenDeploymentStatus({
+          message: `Deployment failed: ${error.message}`,
+          success: false
+        });
+        // Still allow joining even if token deployment fails
+      } finally {
+        setIsDeployingToken(false);
+      }
+    }
+    
+    // Join the room
+    setRoomData({ 
+      roomID, 
+      userID,
+      tokenAddress: deployedToken?.contractAddress,
+      tokenName: tokenName,
+      tokenSymbol: tokenSymbol,
+      isHost: isHost
+    });
     setJoined(true);
   };
 
@@ -94,9 +139,24 @@ function App() {
       {/* Main Content */}
       <div className="w-full min-h-screen flex items-center justify-center pt-20">
         {joined ? (
-          <LiveStream roomID={roomData.roomID} userID={roomData.userID} />
+          <div className="w-full h-[calc(100vh-5rem)]">
+            <LiveStream 
+              roomID={roomData.roomID} 
+              userID={roomData.userID}
+              wallet={wallet}
+              tokenAddress={roomData.tokenAddress}
+              tokenName={roomData.tokenName}
+              tokenSymbol={roomData.tokenSymbol}
+              isHost={roomData.isHost}
+            />
+          </div>
         ) : (
-          <JoinForm onJoin={handleJoin} />
+          <JoinForm 
+            onJoin={handleJoin}
+            wallet={wallet}
+            isDeployingToken={isDeployingToken}
+            tokenDeploymentStatus={tokenDeploymentStatus}
+          />
         )}
       </div>
     </div>

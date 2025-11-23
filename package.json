@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy:testnet": "node scripts/deploy-via-api.js testnet",
+    "deploy:mainnet": "node scripts/deploy-via-api.js mainnet",
+    "server": "node server/index.js",
+    "dev:server": "node --watch server/index.js"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.6",
