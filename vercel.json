@@ -1,13 +1,12 @@
 {
-  "functions": {
-    "api/tip/index.js": {
-      "runtime": "nodejs20.x"
-    }
-  },
-  "rewrites": [
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "functions": {},
+  "routes": [
     {
-      "source": "/api/tip",
-      "destination": "/api/tip"
+      "src": "/(.*)",
+      "dest": "/$1"
     }
   ]
 }

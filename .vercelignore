@@ -1,0 +1,18 @@
+# Ignore API routes (not used - token deployment is client-side)
+api/
+server/
+
+# Ignore Hardhat project (only artifacts are needed, already in repo)
+hardhat-token/node_modules/
+hardhat-token/cache/
+
+# Ignore scripts
+scripts/
+
+# Standard ignores
+node_modules/
+.env
+.env.local
+*.log
+.DS_Store
+
